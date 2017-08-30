@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>Single cell RNA-Seq data analysis report</title>
+
+<style>
+/* basic elements */
+body {
+	margin: 0;
+	padding: 0;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 13px;
+	text-align:center;
+	background-color:#eff6fd;
+}
+
+a:link, a:visited { color:#006ce5; text-decoration: None; }
+a:hover	{ color: black; }
+
+
+/* page title */
+p.pageHeader {
+	font-size:20px; 
+	margin-bottom:30px; 
+	color:#006ce5;
+}
+
+/* nav is used as tabs */
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin-left: 20px;
+}
+
+nav li {
+    float: left;
+    border-top: 1px solid #006ce5;
+    border-right: 1px solid #006ce5;
+    margin: 0;
+    padding: 10px 50px 10px 50px;
+    background: #ebebeb;
+}
+
+nav li a {
+    font-size: 14px;
+}
+
+nav li.selected { background: white; }
+nav li.first { border-left: 1px solid #006ce5; }
+
+/* ul when used as menu items */
+ul.menu { 
+	list-style:none;
+	text-align:right;
+}
+
+ul.menu li {
+	padding-top: 20px;
+}
+
+ul.menu li a.selectedMenu {
+	text-decoration: underline;
+}
+
+/* tabDiv is the container div for each tab - its top margin must match nav size */
+div.tabDiv { 
+	margin: 66px 0px 20px 0px;
+	background-color:white;
+}
+
+/* plotDiv is where plotly does its plotting */
+div.plotDiv {
+	height:700px; 
+	width:1000px; 
+	float:right; 
+	overflow:auto;
+}
+
+/* metadataTable shows metadata table inside "about" tab */
+table.metadataTable {
+	min-width:500px;
+	margin-left:30px;
+	border-spacing: 0;
+}
+
+table.metadataTable th {
+	padding:10px;
+	font-size:16px;
+	vertical-align:top;
+}
+
+table.metadataTable td {
+	padding:10px;
+	border-right: 1px solid #ebebeb;
+	border-bottom: 1px solid #ebebeb;
+	vertical-align:top;
+}
+
+table.metadataTable td:first-child {
+	border-left: 1px solid #ebebeb;
+}
+
+table.metadataTable tr:first-child th {
+	border-bottom: 1px solid #ebebeb;
+}
+
+/* vertMenuTable shows views and expression controls arranged vertically  */
+table.vertMenuTable {
+	padding:20px;
+	border-spacing: 5px;
+}
+
+table.vertMenuTable td {
+	padding: 15px;
+	background: #ebebeb;
+}
+
+img.questionMark {
+	margin: 0 0 -5px 5px;
+}
+
+div.helpDialog {
+	position: absolute;
+	background: #006ce5;
+	opacity: 0.8;
+	padding: 10px 20px 10px 20px;
+	max-width: 400px;
+}
+
+div.footer {
+	padding-bottom: 10px;
+	font-size: 12px;
+}
+
+div.modal {
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+div.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 60%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+span.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+span.close:hover,
+span.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+</style>
+
+<script data-main="js/main" src="js/require.js"></script>
+
+</head>
+
+<body>
+
+<!--------- lasso dialog defined as a vue component --------->
+<script type="x/template" id="lasso-dialog">
+	<div class="modal" v-if="show">
+		<div class="modal-content" style="width:400px; height:300px;"><!-- Modal content -->
+			<span class="close" @click="close">&times;</span>
+			<h3 style="margin-top:50px;">save lasso selection as a cluster</h3>
+			<p style="margin:30px; text-align:left;">After using the lasso tool to select points, you can save your selection as a new cluster here.
+			Give the cluster a name (different from existing clusters), and this cluster will immediately be available for selection.</p>
+			<p><b>{{selectedSampleIds.length}}</b> samples selected</p>
+			<p>save cluster as: <input type="text" v-model="clusterName" value="[name]"> <button @click="saveCluster">save</button></p>
+		</div>
+	</div>		
+</script>
+
+<div id="wrapperDiv">
+
+<!--------- Title and tab navigation --------->
+<p class="pageHeader">Interactive Analysis Report <template v-if="!loading">for {{dataset}}</template></p>
+<template v-if="!loading">
+<nav><ul>
+	<li v-for="(tab,index) in tabs" v-bind:class="{ selected : selectedTab==tab, first:index==0 }">
+	<a href="#" @click="selectedTab=tab;">{{tab}}</a></li>
+</ul></nav>
+</template>
+
+<!--------- About tab --------->
+<about-tab inline-template>
+<div v-show="selectedTab=='About'" class="tabDiv" style="min-height:600px; padding-top:30px;">
+	<table>
+	<tr><td style="vertical-align:top; width:150px;">
+		<ul class="menu"><li><a href="#" @click="selectedOption='dataset'" :class="{ selectedMenu:selectedOption=='dataset'}">about dataset</a></li>
+		<li><a href="#" @click="selectedOption='analysis'" :class="{ selectedMenu:selectedOption=='analysis'}">about analysis</a></li></ul>
+	</td>
+	<td style="vertical-align:top; padding-left:20px;">
+		<div v-if="selectedOption=='dataset'">
+			<table class="metadataTable" style="width:700px;">
+			<tr>
+				<th colspan="2">About the dataset</th>
+			</tr>
+			<tr v-for="key in Object.keys(metadata)">
+				<td style="width:150px; text-align:right;"><b>{{key}}</b></td>
+				<td style="text-align:left;">{{metadata[key]}}</td>
+			</tr>
+			</table>
+		</div>
+		<div v-if="selectedOption=='analysis'">
+			<table class="metadataTable" style="width:700px;">
+			<tr>
+				<th colspan="2">About the analysis</th>
+			</tr>
+			<tr v-for="key in Object.keys(analysisMetadata)">
+				<td style="width:150px; text-align:right;"><b>{{key}}</b></td>
+				<td v-html="analysisMetadata[key]" style="text-align:left;"></td>
+			</tr>
+			</table>
+		</div>
+	</td>
+	<td>
+		<p>genes with available expression values ({{genes.length}})</p>
+		<textarea v-model="genesToShow" style="width:100%; height:300px;"></textarea>
+	</td>
+	</tr></table>
+</div>
+</about-tab>
+
+
+<!--------- PCA/TSNE tab --------->
+<pca-tab inline-template>
+<div v-show="selectedTab=='PCA/TSNE'" class="tabDiv">
+	<table style="padding-top:20px;">
+		<tr><td colspan="2" style="width:1000px; text-align:left; padding-left:200px;">
+			<span style="margin-right:20px;">plot type <select v-model="selectedPlotType" @change="plot"><option v-for="plotType in plotTypes">{{plotType}}</option></select></span>
+			<span style="margin-right:20px;">plot by <select v-model="selectedPlotByOption" @change="plot"><option v-for="option in plotByOptions">{{option}}</option></select></span>
+			<span v-show="selectedPlotByOption=='sample group'">sample group: 
+				<select v-model="selectedSampleGroup" @change="plot"><option v-for="group in sampleGroups">{{group}}</option></select>
+			</span>
+			<span v-show="selectedPlotByOption=='cluster'">cluster: 
+				<select v-model="selectedCluster" @change="plot"><option v-for="cluster in clusters">{{cluster}}</option></select>
+			</span>
+			<span v-show="selectedPlotByOption=='gene expression'">gene: 
+				<input type="text" v-model="selectedGene" @keyup.enter="plot" placeholder="[gene]"><button @click="plot">show</button>
+			</span>
+			<span v-show="selectedPlotByOption=='gene set expression'">
+				gene set: <select v-model="selectedGeneset" @change="plot"><option v-for="item in genesets">{{item.name}}</option></select>
+			</span>
+			<span style="margin-left:40px;">lasso: {{selectedPoints.length}} points 
+				<a href='#' @click="addToSelection=!addToSelection" style="margin-left:10px;" v-html="addToSelection? 'reset' : 'add'"></a> &#47;
+				<a href='#' @click="showLassoDialog=true">save</a>
+				<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('lasso',event)" @mouseout="helpDialog.show=false;">
+			</span>
+		</td></tr>
+		<tr>
+			<td colspan="2"><div v-show="selectedPlotType!='pca vs tsne'" id="pcaPlotDiv" style="height:600px; width:1000px;"></div></td>
+		</tr>
+		<tr>
+			<td><div v-show="selectedPlotType=='pca vs tsne'" id="pvtPlotPcaDiv"></div></td>
+			<td><div v-show="selectedPlotType=='pca vs tsne'" id="pvtPlotTsneDiv"></div></td>
+		</tr>
+	</table>
+	<lasso-dialog v-bind:show="showLassoDialog" v-bind:selected-sample-ids="selectedSampleIds" @close="showLassoDialog=false" v-on:save-cluster="saveCluster"></lasso-dialog>
+</div>
+</pca-tab>
+
+<!--------- Gene vs Gene tab --------->
+<gvg-tab inline-template>
+<div v-show="selectedTab=='Gene vs Gene'" class="tabDiv">
+	<table><tr>
+	<td style="vertical-align:top; padding-top:20px;">
+		<table class="vertMenuTable">
+		<tr v-for="(axis,index) in axes"><td>
+			<b>{{axis}}</b>
+			<select v-model="selectedOption[index]" @change="plot"><option v-for="option in options">{{option}}</option></select>
+			<p v-show="selectedOption[index]=='gene'">gene: 
+				<input type="text" v-model="selectedGene[index]" @keyup.enter="plot" placeholder="[gene]">
+				<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('Press enter after supplying gene here. See About tab for a full list of availble genes.',event)" @mouseout="helpDialog.show=false;">
+			</p>
+			<p v-show="selectedOption[index]=='gene set'">gene set: 
+				<select v-model="selectedGeneset[index]" @change="plot" placeholder="[gene]"><option v-for="item in genesets">{{item.name}}</option></select>
+			</p>
+		</td></tr>
+		<tr><td>
+			<p>plot by <select v-model="selectedPlotByOption" @change="plot"><option v-for="option in plotByOptions">{{option}}</option></select></p>
+			<p v-show="selectedPlotByOption=='sample group'">sample group: 
+				<select v-model="selectedSampleGroup" @change="plot"><option v-for="group in sampleGroups">{{group}}</option></select>
+			</p>
+			<p v-show="selectedPlotByOption=='cluster'">cluster: 
+				<select v-model="selectedCluster" @change="plot"><option v-for="cluster in clusters">{{cluster}}</option></select>
+			</p>
+		</td></tr>
+		<tr><td style="background:white;">
+			<span style="margin-left:40px;">lasso: {{selectedPoints.length}} points 
+			<a href='#' @click="addToSelection=!addToSelection" style="margin-left:10px;" v-html="addToSelection? 'reset' : 'add'"></a> &#47;
+			<a href='#' @click="showLassoDialog=true">save</a>
+			<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('lasso',event)" @mouseout="helpDialog.show=false;">
+			</span>
+		</td></tr>
+		</table>
+	</td>
+	<td>
+		<div id="gvgPlotDiv" class="plotDiv"></div>
+	</td>
+	</tr></table>
+	<lasso-dialog v-bind:show="showLassoDialog" v-bind:selected-sample-ids="selectedSampleIds" @close="showLassoDialog=false" v-on:save-cluster="saveCluster"></lasso-dialog>
+</div>
+</gvg-tab>
+
+
+<!--------- Manage tab --------->
+<manage-tab inline-template>
+<div v-show="selectedTab=='Manage'" class="tabDiv" style="min-height:600px; padding-top:30px;">
+	<table>
+	<tr><td style="vertical-align:top; width:150px;">
+		<ul class="menu"><li><a href="#" @click="selectedOption='manage'" :class="{ selectedMenu:selectedOption=='manage'}">manage data</a></li>
+		<li><a href="#" @click="selectedOption='settings'" :class="{ selectedMenu:selectedOption=='settings'}">settings</a></li></ul>
+	</td>
+	<td style="padding-left:20px;">
+		<div v-if="selectedOption=='manage'">
+		<table class="metadataTable">
+		<tr><th colspan="3">Manage Data</th></tr>
+		<tr>
+			<td style="width:100px; text-align:right;"><b>genesets</b></td>
+			<td style="text-align:left;"><select v-model="selectedGeneset"><option v-for="item in genesets">{{item.name}}</option></select></td>
+			<td><a href="#" @click="exportType='geneset'; showExportDialog=true;">export</a></td>
+		</tr>
+		<tr>
+			<td style="width:100px; text-align:right;"><b>clusters</b></td>
+			<td style="text-align:left;"><select v-model="selectedCluster"><option v-for="item in clusters">{{item}}</option></select></td>
+			<td><a href="#" @click="exportType='cluster'; showExportDialog=true;">export</a></td>
+		</tr>
+		</table>
+		</div>
+		<div v-if="selectedOption=='settings'">
+		<table class="metadataTable">
+		<tr><th colspan="3">Settings 
+			<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('settings',event)" @mouseout="helpDialog.show=false;">
+		</th></tr>
+		<tr>
+			<td style="text-align:right;"><b>point size</b></td>
+			<td style="text-align:left;"><input type="text" v-model="settings.pointSize"> ({{settings.defaults.pointSize}})</td>
+			<td>This sets the size of each point plotted.</td>
+		</tr>
+		<tr>
+			<td colspan="3" style="text-align:right; border:none;"><button @click="updateSettings">save</button></td>
+		</table>
+		</div>
+	</td>
+	</tr></table>
+	<div class="modal" v-if="showExportDialog">
+		<div class="modal-content" style="padding:20px; width:600px;"><!-- Modal content -->
+			<span class="close" @click="showExportDialog=false">&times;</span>
+			<p style="margin-top:50px; text-align:left;">{{exportValue.title}} (use copy and paste with the text shown)</p>
+			<p><textarea v-model="exportValue.content" style="width:100%; height:300px;"></textarea></p>
+		</div>
+	</div>		
+</div>
+</manage-tab>
+
+<div v-if="helpDialog.show" class="helpDialog" v-bind:style="{ top:helpDialog.top + 'px', left:helpDialog.left + 'px'}">
+<p style="color:white;">{{helpDialog.content}}</p>
+</div>
+
+<!--------- footer --------->
+<div class="footer">
+Iscandar reporting tool version: {{version_number}} &nbsp; &bull; &nbsp; <a href="stemformatics.org">stemformatics.org</a>
+</div>
+
+<!--------- Div to show only while loading --------->
+<div class="modal" v-if="loading">
+	<div class="modal-content" style="width:1000px; height:500px; margin-top:100px;"><!-- Modal content -->
+		<p><b style="font-size:16px;">loading...</b></p><img src="img/loading.gif">
+	</div>
+</div>		
+
+</div><!-- wrapper -->
+</body>
+</html>

@@ -1,0 +1,5 @@
+sample_id	celltype
+s1	B
+s2	T
+s3	B
+s4	T

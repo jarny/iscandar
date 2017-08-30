@@ -1,0 +1,4 @@
+name	example
+description	Describe the dataset here, giving a quick summary of what it is about. Could be the user supplied description when requesting a dataset in stemformatics. Only name is the compulsory field in this table.
+read mapping summary	Describe how the reads are mapped, eg: Reads were aligned using subread package in R.
+QC notes	Describe any notes about QC, eg: scater package from R was used to filter out outlier samples.

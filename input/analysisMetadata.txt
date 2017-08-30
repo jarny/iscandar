@@ -1,0 +1,6 @@
+PCA_function	Describe some details of the function used, including references. eg: (python) <a href='http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'>sklearn PCA</a>
+TSNE_function	Same as PCA_function. eg: (R) <a href='https://cran.r-project.org/web/packages/Rtsne/index.html'>Rtsne</a>
+TSNE_parameters	Describe some details of the parameters used for TSNE. eg: perplexity=20 (roughly the number of neighbours for each point),<br/> n_iter=1000 (number of iterations),<br/> 
+Notes	Other general notes useful for the user. eg: log2(cpm+1) was used before performing PCA and TSNE, where cpm is the counts per million expression matrix.
+gene sets	Describe where the gene sets included come from. eg: These gene sets are DE genes between WT vs Mut.
+genes included	Describe which genes have been included in this report for showing expression.

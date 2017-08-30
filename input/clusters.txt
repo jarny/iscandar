@@ -1,0 +1,6 @@
+sample_id	cell_cycle
+s1	S
+s2	G2M
+s3	G1
+s4	S
+
