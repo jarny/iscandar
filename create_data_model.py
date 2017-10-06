@@ -65,7 +65,8 @@ def dataModelFromInputFiles(inputDir="input"):
 	dm.sampleIdsAsGroupItems = dict([(item, [samples.at[sampleId, item] for sampleId in dm.sampleIds]) for item in dm.sampleGroups])
     
     # process cluster info
-	clusters = pandas.read_csv(os.path.join(inputDir, "clusters.txt"), sep="\t", index_col=0).loc[dm.sampleIds]
+	clusters = pandas.read_csv(os.path.join(inputDir, "clusters.txt"), sep="\t", index_col=0)
+	if len(clusters)>0: clusters = clusters.loc[dm.sampleIds]
 	clusterItems = pandas.read_csv(os.path.join(inputDir, "clusterItems.txt"), sep="\t", index_col=0)
 	
 	dm.clusters = clusterItems.index.tolist()
