@@ -20,6 +20,15 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 	dataModel.metadata['report creation date'] = (new Date()).toISOString().split("T")[0];
 	
 	// Assign methods to dataModel, including working out traces for plotly, which depends on the data.
+	dataModel.addCluster = function(clusterName, clusterItems, clusterItemFromSampleId) {
+		if (this.clusters.indexOf(clusterName)==-1) {
+			this.clusters.push(clusterName);
+			this.clusterItems[clusterName] = clusterItems;
+			// also update sampleIdsAsClusterItems
+			this.sampleIdsAsClusterItems[clusterName] = this.sampleIds.map(function(item) { return clusterItemFromSampleId[item]; });
+		}
+	};
+	
 	dataModel.getTraces = function(params) {
 		var self = this;
 		var plotBy = params['plotBy'];
@@ -447,7 +456,8 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 					return;
 				}
 				
-				// Add this cluster to dataModel's list of clusters. Cluster items will just be "cluster01", "cluster02", etc.
+				// Add this cluster to dataModel's list of clusters. Cluster items will just be "cluster01" and "cluster02",
+				// where cluster01 is the group of selected samples and cluster02 is the other group.
 				var clusterItems = ["cluster01", "cluster02"];
 				var clusterItemFromSampleId = {};
 				for (var i=0; i<dataModel.sampleIds.length; i++)
