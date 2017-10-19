@@ -2,7 +2,7 @@ Iscandar
 ======
 **Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. The report is a fully self-contained folder where the html file accesses all required javascript files within the same location.
 
-![Screenshot](https://github.com/jarny/iscandar/assets/Screenshot1.png)
+![Screenshot](/assets/Screenshot1.png)
 
 ## How to use it
 Clone this repo and populate all the files in the input directory. Then run:
