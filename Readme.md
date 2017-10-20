@@ -1,10 +1,18 @@
 Iscandar
 ======
-**Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. The report is a fully self-contained folder where the html file accesses all required javascript files within the same location.
+**Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. It can be used as a standalone application to look up gene expression and gene set expression profiles on clustering which have already been performed (it takes PCA and TSNE coordinates as input, rather than performing any clustering itself). [Download a demo](/assets/lanner.zip) (120Mb) with a full published dataset (unzip and open Report.html in your browser).
 
 ![Screenshot](/assets/Screenshot1.png)
 
-## How to use it
+## Key features
+- Show two types of clustering (usually PCA and TSNE) on interactive scatter plots (using plotly). There is also a side-by-side view so that comparisons can be made between the two.
+- Lasso points on the screen and define these as a new cluster. On the side-by-side view of the plots, lassoing one plot automatically shows corresponding points in the other.
+- Look up gene expression as a colour gradient on each plot. 
+- Look up mean expression to a gene set as a colour gradient on each plot.
+- View gene vs gene or gene vs gene set (mean) scatter plots.
+- Download a plot as a PNG image (plotly provided function).
+
+## How to build a report
 Clone this repo and populate all the files in the input directory. Then run:
 ```bash
 python create_data_model.py
@@ -30,7 +38,7 @@ Each file comes with example data so that its required format can be easily work
 Contains description of the analysis performed, and is in a two column table format in a key-value relationship. None of the keys are required fields.
 
 ### clusterItems.txt
-Contains names of clusters and which items belong to each cluster, as well as what colour to use for each item in the cluster.
+Clusters are sample assignments, often made computationally rather than originating from sample meta data (which belongs to sample groups below). This file contains names of clusters and which items belong to each cluster, as well as what colour to use for each item in the cluster.
 
 ### clusters.txt
 Mapping of sample ids to cluster items. Ensure that column headers here match cluster names found in clusterItems.txt.
@@ -39,16 +47,16 @@ Mapping of sample ids to cluster items. Ensure that column headers here match cl
 Expression matrix in the usual format of genes as row ids and sample ids as columns. Note that user can only search for gene expression if the gene occurs as a row id in this matrix. So if gene ids are used, the user has to use the same ids for search. Also note that larger this matrix is, the larger the report will be in size and longer the loading time, as this takes up the vast majority of the data.
 
 ### genesets.txt
-List of gene sets in 3 column table format, where first column is the name of the gene set, second is the list of genes joined by comma, and third is the mean expression value of the gene set for each cell joined by comma (so these should match the ordering of the sample ids in pca.txt). Note that genes here can actually be different to the row ids of expression matrix, as the report does not compute the mean expression values but just uses the values supplied in the 3rd column.
+Gene sets enable Iscandar to show mean expression of all gene in a gene set for each sample. This file contains a list of gene sets in 3 column table format, where first column is the name of the gene set, second is the list of genes joined by comma, and third is the mean expression value of the gene set for each cell joined by comma (so these should match the ordering of the sample ids in pca.txt). Note that genes here can actually be different to the row ids of expression matrix, as the report does not compute the mean expression values but just uses the values supplied in the 3rd column.
 
 ### metadata.txt
 Description of the dataset in a two column table format. "name" key is the only required key, used by the app.
 
 ### pca.txt
-pca coordinates used by the report to show pca, in Nx2 format table, where N=number of samples. Note that ordering of sample ids in this data frame will be assumed for all lists requring sample id list.
+pca coordinates used by the report to show pca, in Nx2 format table, where N=number of samples. Note that ordering of sample ids in this data frame will be assumed for all lists requring sample id list. Even though this is called pca, it can be some other coordinates, such as MDS - just make a note in analysisMetadata.txt.
 
 ### sampleGroupItems.txt
-Contains names of sample groups and which items belong to each sample group, as well as what colour to use for each item in the sample group. A 'sampleGroup' is some grouping of samples, such as celltype, timepoint, etc. And each sample group will comprise of the items specified in the second column. Note that same ordering of the items here will be used to draw each trace for that sample group in the report.
+Contains names of sample groups and which items belong to each sample group, as well as what colour to use for each item in the sample group. A 'sampleGroup' is some experimental grouping of samples, such as celltype, timepoint, etc. And each sample group will comprise of the items specified in the second column. Note that same ordering of the items here will be used to draw each trace for that sample group in the report.
 
 ### samples.txt
 Mapping of sample ids to sample group items. Ensure that column headers here match sample group names found in sampleGroupItems.txt.
