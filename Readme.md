@@ -2,7 +2,7 @@ Iscandar
 ======
 **Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. It can be used as a standalone application to look up gene expression and gene set expression profiles on clustering which have already been performed (it takes PCA and TSNE coordinates as input, rather than performing any clustering itself). [Download a demo](/assets/lanner.zip) (120Mb) with a full published dataset (unzip and open Report.html in your browser).
 
-![Screenshot](/assets/Screenshot1.png)
+![Screenshot](/assets/Screenshot2.png)
 
 ## Key features
 - Show two types of clustering (usually PCA and TSNE) on interactive scatter plots (using plotly). There is also a side-by-side view so that comparisons can be made between the two.
