@@ -1,12 +1,12 @@
 Iscandar
 ======
-**Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. It can be used as a standalone application to look up gene expression and gene set expression profiles on clustering which have already been performed (it takes PCA and TSNE coordinates as input, rather than performing any clustering itself). [Download a demo](/assets/lanner.zip) (120Mb) with a full published dataset (unzip and open Report.html in your browser).
+**Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. It can be used as a standalone application to look up gene expression and gene set expression profiles on clustering which have already been performed (it takes PCA and TSNE coordinates as input, rather than performing any clustering itself). [Download a demo](/assets/lanner.zip) (15Mb) with a full published dataset (unzip and open Report.html in your browser).
 
 ![Screenshot](/assets/Screenshot2.png)
 
 ## Key features
 - Show two types of clustering (usually PCA and TSNE) on interactive scatter plots (using plotly). There is also a side-by-side view so that comparisons can be made between the two.
-- Lasso points on the screen and define these as a new cluster. On the side-by-side view of the plots, lassoing one plot automatically shows corresponding points in the other.
+- Lasso points on the screen and define these as new clusters. On the side-by-side view of the plots, lassoing one plot automatically shows corresponding points in the other.
 - Look up gene expression as a colour gradient on each plot. 
 - Look up mean expression to a gene set as a colour gradient on each plot.
 - View gene vs gene or gene vs gene set (mean) scatter plots.
@@ -32,13 +32,13 @@ dm.saveJSFile()
 Here we assign each of the required input variables directly to the DataModel class and invoke its saveJSFile() method to save the file to arrive at the same result.
 
 ## Description of Required input files under input/:
-Each file comes with example data so that its required format can be easily worked out. More detailed descriptions are here. All tables use tab as column separators.
+Each file comes with example data so that its required format can be easily worked out. More detailed descriptions are here. All tables use tab as the column separator.
 
 ### analysisMetadata.txt
 Contains description of the analysis performed, and is in a two column table format in a key-value relationship. None of the keys are required fields.
 
 ### clusterItems.txt
-Clusters are sample assignments, often made computationally rather than originating from sample meta data (which belongs to sample groups below). This file contains names of clusters and which items belong to each cluster, as well as what colour to use for each item in the cluster.
+Clusters are sample assignments, often made computationally rather than originating from sample meta data (which belongs to sample groups - see below). This file contains names of clusters and which items belong to each cluster, as well as what colour to use for each item in the cluster.
 
 ### clusters.txt
 Mapping of sample ids to cluster items. Ensure that column headers here match cluster names found in clusterItems.txt.
