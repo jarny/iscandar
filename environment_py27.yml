@@ -1,0 +1,8 @@
+name: iscandar
+channels:
+- defaults
+dependencies:
+- python=2.7.13=0
+- mako=1.0.6=py27_0
+- numpy=1.13.1=py27_0
+- pandas=0.20.3=py27_0
