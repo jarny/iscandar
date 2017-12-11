@@ -13,13 +13,13 @@ require.config({
 define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, Plotly, DataModel) {
 
 	// -----------------------------------------------------------------------------------
-	// Extend data model by adding functions
+	// Extend data model by adding functions more specific to this application
 	// -----------------------------------------------------------------------------------
 	var dataModel = DataModel;
 	dataModel.metadata['number of samples'] = dataModel.pca[0].length;
 	dataModel.metadata['report creation date'] = (new Date()).toISOString().split("T")[0];
 	
-	// Assign methods to dataModel, including working out traces for plotly, which depends on the data.
+	// Method to add a new cluster, eg. addCluster("myCluster", ["cluster1","cluster2"], {"cluster1":"sample2",...})
 	dataModel.addCluster = function(clusterName, clusterItems, clusterItemFromSampleId) {
 		if (this.clusters.indexOf(clusterName)==-1) {
 			this.clusters.push(clusterName);
@@ -29,6 +29,12 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 		}
 	};
 	
+	// This method returns traces for plotly, based on params.
+	// plotBy: (string) ['sample group','cluster','gene expression','gene set expression']
+	// selectedSampleGroup: (string) must be an element of Object.keys(self.sampleGroupItems) or null
+	// selectedCluster: (string) must be an element of Object.keys(self.clusterItems) or null
+	// selectedGene: (string) should be an element of Object.keys(self.expressionValues), but will be ignored if not
+	// selectedGeneset: (string) should be an element of Object.keys(self.genesetExpressionValues), but will be ignored if not
 	dataModel.getTraces = function(params) {
 		var self = this;
 		var plotBy = params['plotBy'];
@@ -74,7 +80,8 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 			}
 		}
 		else if (plotBy=='gene expression' || plotBy=='gene set expression') {
-			if (plotBy=='gene expression' && selectedGene in self.geneExpressionValues || plotBy=='gene set expression') {
+			if (plotBy=='gene expression' && selectedGene in self.geneExpressionValues || 
+					plotBy=='gene set expression' && selectedGeneset in self.genesetExpressionValues) {
 				var expressionValues = plotBy=='gene expression'? self.geneExpressionValues[selectedGene] : self.genesetExpressionValues[selectedGeneset];
 				var name = plotBy=='gene expression'? selectedGene : selectedGeneset;
 				var trace = {
@@ -199,11 +206,11 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 				selectedPlotByOption: 'sample group',
 				selectedGene: '',
 				genesets: dataModel.genesets,
-				selectedGeneset: dataModel.genesets[0].name,
+				selectedGeneset: dataModel.genesets.length>0? dataModel.genesets[0].name: null,
 				sampleGroups: dataModel.sampleGroups,
-				selectedSampleGroup: dataModel.sampleGroups[0],	// default sampleGroup, eg 'celltype'
+				selectedSampleGroup: dataModel.sampleGroups.length>0? dataModel.sampleGroups[0]: null,	// default sampleGroup, eg 'celltype'
 				//clusters: dataModel.clusters,
-				selectedCluster: dataModel.clusters[0],
+				selectedCluster: dataModel.clusters.length>0? dataModel.clusters[0] : null,
 				selectedPoints: [],
 				addToSelection: false,
 			};
@@ -248,6 +255,7 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 					var div = document.getElementById(divId);  // div.on() below doesn't like d3.select() object								
 					div.on('plotly_selected', function(eventData) {
 						if (!self.addToSelection) self.selectedPoints = [];
+						if (eventData==undefined) return;	// seems to happen for point clicks rather than full lasso
 						
 						eventData.points.forEach(function(point) {
 							var sampleId = traces[point.curveNumber].sampleIds[point.pointNumber];
@@ -286,7 +294,7 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 				options: ['gene', 'gene set'],
 				selectedOption: ['gene','gene'],	// 1st element=x-axis, 2nd for y
 				selectedGene: ['',''],
-				selectedGeneset: [dataModel.genesets[0].name,dataModel.genesets[0].name],
+				selectedGeneset: dataModel.genesets.length>0? [dataModel.genesets[0].name,dataModel.genesets[0].name]: [null,null],
 				plotByOptions: ['sample group', 'cluster'],
 				selectedPlotByOption: 'sample group',
 				sampleGroups: dataModel.sampleGroups,
@@ -332,7 +340,8 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 				var div = document.getElementById(this.divId);
 				div.on('plotly_selected', function(eventData) {
 					if (!self.addToSelection) self.selectedPoints = [];
-					
+					if (eventData==undefined) return;	// seems to happen for point clicks rather than full lasso
+
 					eventData.points.forEach(function(point) {
 						var sampleId = traces[point.curveNumber].sampleIds[point.pointNumber];
 						if (self.selectedSampleIds.indexOf(sampleId)==-1)
@@ -358,9 +367,9 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 			return {
 				selectedOption: "manage",
 				genesets: dataModel.genesets,
-				selectedGeneset: dataModel.genesets[0].name,
+				selectedGeneset: dataModel.genesets.length>0? dataModel.genesets[0].name : null,
 				clusters: dataModel.clusters,
-				selectedCluster: dataModel.clusters[0],
+				selectedCluster: dataModel.clusters.length>0? dataModel.clusters[0] : null,
 				showExportDialog: false,
 				exportType: '',
 			};
@@ -369,8 +378,12 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 			exportValue: function() {
 				var self = this;
 				if (self.exportType=='geneset') {
-					var geneset = dataModel.genesets.filter(function(item) { return item.name==self.selectedGeneset; })[0];
-					return {title: 'genes in ' + self.selectedGeneset, content: geneset.genes.join('\n')};
+					if (dataModel.genesets.length>0) {
+						var geneset = dataModel.genesets.filter(function(item) { return item.name==self.selectedGeneset; })[0];
+						return {title: 'genes in ' + self.selectedGeneset, content: geneset.genes.join('\n')};
+					} else {
+						return {title: 'No geneset', content: ''};
+					}
 				} else if (self.exportType=='cluster') {
 					// parse sampleIdsAsClusterItems
 					var lines = [];
@@ -448,7 +461,11 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 			
 			saveCluster: function(clusterName, selectedSampleIds)
 			{
-				if (dataModel.clusters.indexOf(clusterName)!=-1) {
+				if (dataModel.clusters.length==0) {
+					alert("No clusters exist.");
+					return;
+				}
+				else if (dataModel.clusters.indexOf(clusterName)!=-1) {
 					alert("Another cluster with this name already exists.");
 					return;
 				} else if (selectedSampleIds.length==0) {
