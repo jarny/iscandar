@@ -40,6 +40,7 @@ class DataModel(object):
 				  'genesetExpressionValues':self.genesetExpressionValues,
 				  'geneExpressionValues':self.geneExpressionValues,
 				 }
+		#print(self.sampleIdsAsGroupItems)
 		template = Template(filename=templateFile)
 		open(outfile,'w').write(template.render(**params))
     
@@ -60,9 +61,9 @@ def dataModelFromInputFiles(inputDir="input"):
 	sampleGroupItems = pandas.read_csv(os.path.join(inputDir, "sampleGroupItems.txt"), sep="\t", index_col=0)
 	
 	dm.sampleGroups = sampleGroupItems.index.tolist()
-	dm.sampleGroupItems = dict([(index, row[0].split(',')) for index,row in sampleGroupItems.iterrows()])
+	dm.sampleGroupItems = dict([(index, [str(item) for item in row[0].split(',')]) for index,row in sampleGroupItems.iterrows()])
 	dm.sampleGroupColours = dict([(index, dict(zip(row[0].split(','), row[1].split(',')))) for index,row in sampleGroupItems.iterrows()])
-	dm.sampleIdsAsGroupItems = dict([(item, [samples.at[sampleId, item] for sampleId in dm.sampleIds]) for item in dm.sampleGroups])
+	dm.sampleIdsAsGroupItems = dict([(item, [str(samples.at[sampleId, item]) for sampleId in dm.sampleIds]) for item in dm.sampleGroups])
     
     # process cluster info
 	clusters = pandas.read_csv(os.path.join(inputDir, "clusters.txt"), sep="\t", index_col=0)
@@ -70,9 +71,9 @@ def dataModelFromInputFiles(inputDir="input"):
 	clusterItems = pandas.read_csv(os.path.join(inputDir, "clusterItems.txt"), sep="\t", index_col=0)
 	
 	dm.clusters = clusterItems.index.tolist()
-	dm.clusterItems = dict([(index, row[0].split(',')) for index,row in clusterItems.iterrows()])
+	dm.clusterItems = dict([(index, [str(item) for item in row[0].split(',')]) for index,row in clusterItems.iterrows()])
 	dm.clusterColours = dict([(index, dict(zip(row[0].split(','), row[1].split(',')))) for index,row in clusterItems.iterrows()])
-	dm.sampleIdsAsClusterItems = dict([(item, [clusters.at[sampleId, item] for sampleId in dm.sampleIds]) for item in dm.clusters])
+	dm.sampleIdsAsClusterItems = dict([(item, [str(clusters.at[sampleId, item]) for sampleId in dm.sampleIds]) for item in dm.clusters])
 	
 	# process genesets
 	genesets = pandas.read_csv(os.path.join(inputDir, "genesets.txt"), sep="\t", index_col=0)
