@@ -56,13 +56,13 @@ def dataModelFromInputFiles(inputDir="input"):
 	dm.analysisMetadata = pandas.read_csv(os.path.join(inputDir, "analysisMetadata.txt"), sep="\t", index_col=0, header=None).to_dict()[1]
 	
 	# process sample info
-	dm.sampleIds = dm.pca.index.tolist()
+	dm.sampleIds = [str(item) for item in dm.pca.index.tolist()]
 	samples = pandas.read_csv(os.path.join(inputDir, "samples.txt"), sep="\t", index_col=0).loc[dm.sampleIds]
 	sampleGroupItems = pandas.read_csv(os.path.join(inputDir, "sampleGroupItems.txt"), sep="\t", index_col=0)
 	
-	dm.sampleGroups = sampleGroupItems.index.tolist()
-	dm.sampleGroupItems = dict([(index, [str(item) for item in row[0].split(',')]) for index,row in sampleGroupItems.iterrows()])
-	dm.sampleGroupColours = dict([(index, dict(zip(row[0].split(','), row[1].split(',')))) for index,row in sampleGroupItems.iterrows()])
+	dm.sampleGroups = [str(item) for item in sampleGroupItems.index.tolist()]
+	dm.sampleGroupItems = dict([(str(index), [str(item) for item in row[0].split(',')]) for index,row in sampleGroupItems.iterrows()])
+	dm.sampleGroupColours = dict([(str(index), dict(zip(row[0].split(','), row[1].split(',')))) for index,row in sampleGroupItems.iterrows()])
 	dm.sampleIdsAsGroupItems = dict([(item, [str(samples.at[sampleId, item]) for sampleId in dm.sampleIds]) for item in dm.sampleGroups])
     
     # process cluster info
@@ -70,9 +70,9 @@ def dataModelFromInputFiles(inputDir="input"):
 	if len(clusters)>0: clusters = clusters.loc[dm.sampleIds]
 	clusterItems = pandas.read_csv(os.path.join(inputDir, "clusterItems.txt"), sep="\t", index_col=0)
 	
-	dm.clusters = clusterItems.index.tolist()
-	dm.clusterItems = dict([(index, [str(item) for item in row[0].split(',')]) for index,row in clusterItems.iterrows()])
-	dm.clusterColours = dict([(index, dict(zip(row[0].split(','), row[1].split(',')))) for index,row in clusterItems.iterrows()])
+	dm.clusters = [str(item) for item in clusterItems.index.tolist()]
+	dm.clusterItems = dict([(str(index), [str(item) for item in row[0].split(',')]) for index,row in clusterItems.iterrows()])
+	dm.clusterColours = dict([(str(index), dict(zip(row[0].split(','), row[1].split(',')))) for index,row in clusterItems.iterrows()])
 	dm.sampleIdsAsClusterItems = dict([(item, [str(clusters.at[sampleId, item]) for sampleId in dm.sampleIds]) for item in dm.clusters])
 	
 	# process genesets
