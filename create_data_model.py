@@ -57,7 +57,9 @@ def dataModelFromInputFiles(inputDir="input"):
 	
 	# process sample info
 	dm.sampleIds = [str(item) for item in dm.pca.index.tolist()]
-	samples = pandas.read_csv(os.path.join(inputDir, "samples.txt"), sep="\t", index_col=0).loc[dm.sampleIds]
+	samples = pandas.read_csv(os.path.join(inputDir, "samples.txt"), sep="\t", index_col=0)
+	samples.index = [str(item) for item in samples.index]
+	samples = samples.loc[dm.sampleIds]
 	sampleGroupItems = pandas.read_csv(os.path.join(inputDir, "sampleGroupItems.txt"), sep="\t", index_col=0)
 	
 	dm.sampleGroups = [str(item) for item in sampleGroupItems.index.tolist()]
@@ -67,6 +69,7 @@ def dataModelFromInputFiles(inputDir="input"):
     
     # process cluster info
 	clusters = pandas.read_csv(os.path.join(inputDir, "clusters.txt"), sep="\t", index_col=0)
+	clusters.index = [str(item) for item in clusters.index]
 	if len(clusters)>0: clusters = clusters.loc[dm.sampleIds]
 	clusterItems = pandas.read_csv(os.path.join(inputDir, "clusterItems.txt"), sep="\t", index_col=0)
 	
