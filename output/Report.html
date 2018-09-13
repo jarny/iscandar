@@ -208,8 +208,11 @@ span.close:focus {
 <div v-show="selectedTab=='About'" class="tabDiv" style="min-height:600px; padding-top:30px;">
 	<table>
 	<tr><td style="vertical-align:top; width:150px;">
-		<ul class="menu"><li><a href="#" @click="selectedOption='dataset'" :class="{ selectedMenu:selectedOption=='dataset'}">about dataset</a></li>
-		<li><a href="#" @click="selectedOption='analysis'" :class="{ selectedMenu:selectedOption=='analysis'}">about analysis</a></li></ul>
+		<ul class="menu">
+			<li><a href="#" @click="selectedOption='dataset'" :class="{ selectedMenu:selectedOption=='dataset'}">about dataset</a></li>
+			<li><a href="#" @click="selectedOption='analysis'" :class="{ selectedMenu:selectedOption=='analysis'}">about analysis</a></li>
+			<li><a href="#" @click="selectedOption='report'" :class="{ selectedMenu:selectedOption=='report'}">about this report</a></li>
+		</ul>
 	</td>
 	<td style="vertical-align:top; padding-left:20px;">
 		<div v-if="selectedOption=='dataset'">
@@ -234,6 +237,22 @@ span.close:focus {
 			</tr>
 			</table>
 		</div>
+		<div v-if="selectedOption=='report'">
+			<table class="metadataTable" style="width:700px;">
+			<tr>
+				<th colspan="2">About this report</th>
+			</tr>
+			<tr>
+				<td style="text-align: left"><p>This report presents the results of a prior clustering analysis on a single cell RNA-Seq dataset.,
+					so that a gene expression profile can be viewed as a colour gradient up on top of the clustering coordinates.</p>
+					<p>Note that the report does not perform any clustering itself - these must be done elsewhere, and simply used as input for this
+						report, which is designed for interactive expression profile look ups. Another feature present is the gene vs gene graph,
+						which plots expression of one gene against another.
+					</p>
+				</td>
+			</tr>
+			</table>
+		</div>
 	</td>
 	<td>
 		<p>genes with available expression values ({{genes.length}})</p>
@@ -249,25 +268,39 @@ span.close:focus {
 <div v-show="selectedTab=='PCA/TSNE'" class="tabDiv">
 	<table style="padding-top:20px;">
 		<tr><td colspan="2" style="width:1000px; text-align:left; padding-left:200px;">
-			<span style="margin-right:20px;">plot type <select v-model="selectedPlotType" @change="plot"><option v-for="plotType in plotTypes">{{plotType}}</option></select></span>
-			<span style="margin-right:20px;">plot by <select v-model="selectedPlotByOption" @change="plot"><option v-for="option in plotByOptions">{{option}}</option></select></span>
+			<div style="width:800px; text-align: center;">
+			<p>This plot shows the results of prior clustering performed on the samples of this dataset, and uses these results to overlay
+				information about each sample using colours. Hover over the question mark to see more helpful text.
+			</p>
+			</div>
+		</td></tr>
+		<tr><td colspan="2" style="width:1000px; text-align:left; padding-left:200px;">
+			<span>plot type <select v-model="selectedPlotType" @change="plot"><option v-for="plotType in plotTypes">{{plotType}}</option></select></span>
+			<img style="margin-right:20px;" src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('plotType',event)" @mouseout="helpDialog.show=false;">
+			<span>plot by <select v-model="selectedPlotByOption" @change="plot"><option v-for="option in plotByOptions">{{option}}</option></select></span>
+			<img style="margin-right:20px;" src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('plotBy',event)" @mouseout="helpDialog.show=false;">
 			<span v-show="selectedPlotByOption=='sample group'">sample group: 
 				<select v-model="selectedSampleGroup" @change="plot"><option v-for="group in sampleGroups">{{group}}</option></select>
 			</span>
 			<span v-show="selectedPlotByOption=='cluster'">cluster: 
 				<select v-model="selectedCluster" @change="plot"><option v-for="cluster in clusters">{{cluster}}</option></select>
+				<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('cluster',event)" @mouseout="helpDialog.show=false;">
 			</span>
 			<span v-show="selectedPlotByOption=='gene expression'">gene: 
 				<input type="text" v-model="selectedGene" @keyup.enter="plot" placeholder="[gene]"><button @click="plot">show</button>
+				<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('geneExpression',event)" @mouseout="helpDialog.show=false;">
 			</span>
 			<span v-show="selectedPlotByOption=='gene set expression'">
 				gene set: <select v-model="selectedGeneset" @change="plot"><option v-for="item in genesets">{{item.name}}</option></select>
+				<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('genesetExpression',event)" @mouseout="helpDialog.show=false;">
 			</span>
+			<!--
 			<span style="margin-left:40px;">lasso: {{selectedPoints.length}} points 
 				<a href='#' @click="addToSelection=!addToSelection" style="margin-left:10px;" v-html="addToSelection? 'reset' : 'add'"></a> &#47;
 				<a href='#' @click="showLassoDialog=true">save</a>
 				<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('lasso',event)" @mouseout="helpDialog.show=false;">
 			</span>
+			-->
 		</td></tr>
 		<tr>
 			<td colspan="2"><div v-show="selectedPlotType!='pca vs tsne'" id="pcaPlotDiv" style="height:600px; width:1000px;"></div></td>
@@ -284,6 +317,11 @@ span.close:focus {
 <!--------- Gene vs Gene tab --------->
 <gvg-tab inline-template>
 <div v-show="selectedTab=='Gene vs Gene'" class="tabDiv">
+	<div style="width:800px; text-align: center; padding:20px; margin-left:100px;">
+	<p>This plot can be used to compare expression values of one gene against another. Enter a gene and hit return. Not all gene expression values are held in this report, 
+		due to performance issues (this page is a standalone html which may not open if it is too large). See About tab to see the full list of genes included in this report.
+	</p>
+	</div>
 	<table><tr>
 	<td style="vertical-align:top; padding-top:20px;">
 		<table class="vertMenuTable">
@@ -307,6 +345,7 @@ span.close:focus {
 				<select v-model="selectedCluster" @change="plot"><option v-for="cluster in clusters">{{cluster}}</option></select>
 			</p>
 		</td></tr>
+		<!--
 		<tr><td style="background:white;">
 			<span style="margin-left:40px;">lasso: {{selectedPoints.length}} points 
 			<a href='#' @click="addToSelection=!addToSelection" style="margin-left:10px;" v-html="addToSelection? 'reset' : 'add'"></a> &#47;
@@ -314,6 +353,7 @@ span.close:focus {
 			<img src="img/question_mark.png" width="20px;" class="questionMark" @mouseover="showHelpDialog('lasso',event)" @mouseout="helpDialog.show=false;">
 			</span>
 		</td></tr>
+		-->
 		</table>
 	</td>
 	<td>
@@ -337,6 +377,7 @@ span.close:focus {
 		<div v-if="selectedOption=='manage'">
 		<table class="metadataTable">
 		<tr><th colspan="3">Manage Data</th></tr>
+		<tr><td colspan="3"><p>You can export the genes in your geneset or export the samples belonging to clusters here.</p></td></tr>
 		<tr>
 			<td style="width:100px; text-align:right;"><b>genesets</b></td>
 			<td style="text-align:left;"><select v-model="selectedGeneset"><option v-for="item in genesets">{{item.name}}</option></select></td>

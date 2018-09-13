@@ -17,7 +17,6 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 	// -----------------------------------------------------------------------------------
 	var dataModel = DataModel;
 	dataModel.metadata['number of samples'] = dataModel.pca[0].length;
-	dataModel.metadata['report creation date'] = (new Date()).toISOString().split("T")[0];
 	
 	// Method to add a new cluster, eg. addCluster("myCluster", ["cluster1","cluster2"], {"cluster1":"sample2",...})
 	dataModel.addCluster = function(clusterName, clusterItems, clusterItemFromSampleId) {
@@ -233,7 +232,9 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 						return;
 					}
 				}
-								
+				else if (self.selectedPlotByOption=='cluster' && typeof dataModel.clusterItems[self.selectedCluster] === 'undefined')
+					return;
+							
 				// coords depends on plotType
 				for (var i=0; i<self.coordFromPlotType[self.selectedPlotType].length; i++) {								
 					var traces = dataModel.getTraces({'plotBy':self.selectedPlotByOption, 
@@ -387,6 +388,9 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 				} else if (self.exportType=='cluster') {
 					// parse sampleIdsAsClusterItems
 					var lines = [];
+					if (typeof dataModel.clusterItems[self.selectedCluster] === 'undefined')
+						return {title:'No cluster defined', content:''};
+
 					for (var i=0; i<dataModel.clusterItems[self.selectedCluster].length; i++) {
 						var sampleIds = dataModel.sampleIds.filter(function(sampleId,index) { 
 							return dataModel.sampleIdsAsClusterItems[self.selectedCluster][index]==dataModel.clusterItems[self.selectedCluster][i]; 
@@ -416,7 +420,7 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 				defaults: {'pointSize': settings.defaultValue('pointSize')},
 				pointSize: settings.getValue('pointSize') 
 			},
-			version_number: '0.1.1',
+			version_number: '0.1.2',
 			loading:true,
 			showLassoDialog: false,
 			
@@ -431,6 +435,16 @@ define(['d3', 'vue.min', 'plotly-latest.min', 'data-model'], function(d3, Vue, P
 								  "The default value is shown in the brackets.",
 						'lasso':"You can use the lasso tool to select points, and 'add' option can be toggled to add to the current selection. " +
 								"Use 'save' to save the selection as a new cluster. Otherwise when the plot changes, the selection will be reset.",
+						'plotType':"This shows the type of clustering that was performed.",
+						'plotBy':"Changes the colour groups used for the samples. 'sample group' comes from the original annotations of the samples " +
+								 "in this dataset (eg. 'tissue' or 'genotype'). cluster comes from computed clusters (eg. 'hCluster1'). " +
+								 "For gene expression, enter a gene to see its expression values rendered as a colour gradient.",
+						'geneExpression':"Not all gene expression values are held in this report, due to performance issues (this page is a standalone html " +
+										 "which may not open if it is too large). See About tab to see the full list of genes included in this report.",
+						'genesetExpression':"These are previously defined gene sets of interest. The colour gradient is now calculated on the mean value of " +
+											"all the genes in the set. Gene sets may not be defined for a dataset. See About -> about analysis for more info on gene sets " +
+											"and Manage -> manage data for an option to export the genes in a gene set.",
+						'cluster':"Clusters may not always be defined for a dataset.",
 						'view':"Use these selections to re-draw the plot. Note that changing view will render the last view used, " +
 							   "so plotting by gene expression will show the expression of last gene shown, for example.",
 						'expression':"Expression values of a gene can be shown as a colour scale here, or the mean expression value for a gene set " +

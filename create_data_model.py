@@ -13,6 +13,7 @@ If using from within a python script to create the input variables directly:
 
 import os, pandas
 from mako.template import Template
+import time
 
 class DataModel(object):
 	"""See input directory and dataModelFromInputFiles() function below for examples of data required to be attached to DataModel object.
@@ -51,6 +52,7 @@ def dataModelFromInputFiles(inputDir="input"):
 	dm = DataModel()
 	
 	dm.metadata = pandas.read_csv(os.path.join(inputDir, "metadata.txt"), sep="\t", index_col=0, header=None).to_dict()[1]
+	dm.metadata['report creation date'] = time.strftime('%Y-%m-%d', time.localtime())
 	dm.pca = pandas.read_csv(os.path.join(inputDir, "pca.txt"), sep="\t", index_col=0)
 	dm.tsne = pandas.read_csv(os.path.join(inputDir, "tsne.txt"), sep="\t", index_col=0)
 	dm.analysisMetadata = pandas.read_csv(os.path.join(inputDir, "analysisMetadata.txt"), sep="\t", index_col=0, header=None).to_dict()[1]
