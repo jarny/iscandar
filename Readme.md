@@ -1,6 +1,6 @@
 Iscandar
 ======
-**Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. It can be used as a standalone application to look up gene expression and gene set expression profiles on clustering which have already been performed (it takes PCA and TSNE coordinates as input, rather than performing any clustering itself). [Download a demo](/assets/lanner.zip) (15Mb) with a full published dataset (unzip and open Report.html in your browser).
+**Iscandar** (Interactive Single Cell Data Analysis Report) is a set of python scripts and html/javascript files used to create interactive report for single cell rna-seq analysis. It can be used as a standalone application to look up gene expression and gene set expression profiles on clustering which have already been performed (it takes PCA and TSNE coordinates as input, rather than performing any clustering itself). [Download a demo](/assets/lanner.zip) (5Mb) with a full published dataset (unzip and open Report.html in your browser).
 
 ![Screenshot](/assets/Screenshot2.png)
 
@@ -126,7 +126,7 @@ Plotly.downloadImage(document.getElementById("plotDiv"), {format: 'png', width: 
 **Jarny Choi**, stemformatics.org (jarny@stemformatics.org)
 
 ## Changes 
-* v0.1.1 - initial version.
+* v0.1.2 - Fixed a bug where creation date showed today's date. Added help text in many parts of the pages. Disabled lasso for now.
 
 ## License
 [MIT License](LICENSE.txt)
